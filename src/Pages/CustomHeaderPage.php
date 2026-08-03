@@ -3,28 +3,35 @@
 namespace CustomHeader\Pages;
 
 use App\Facades\Plugin;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Panel;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
+use Throwable;
 
 class CustomHeaderPage extends Page implements HasForms
 {
 	use InteractsWithForms;
 
+	public ?array $data = [];
+
 	protected static ?string $title = 'Custom Header Plugin';
 
-	protected static string $view = 'CustomHeader::custom-header';
+	protected string $view = 'CustomHeader::custom-header';
 
 	protected static bool $shouldRegisterNavigation = false;
 
-	public ?array $data = [];
+	public static function getRoutePath(Panel $panel): string
+	{
+		return '/custom-header';
+	}
 
 	public function mount(): void
 	{
@@ -34,11 +41,6 @@ class CustomHeaderPage extends Page implements HasForms
 			'header_content' => $plugin->getSetting('header_content'),
 			'footer_content' => $plugin->getSetting('footer_content'),
 		]);
-	}
-
-	public static function getRoutePath(): string
-	{
-		return '/custom-header';
 	}
 
 	/**
@@ -56,9 +58,9 @@ class CustomHeaderPage extends Page implements HasForms
 		HTML);
 	}
 
-	public function form(Form $form): Form
+	public function form(Schema $schema): Schema
 	{
-		return $form
+		return $schema
 			->schema([
 				Section::make()
 					->schema([
@@ -75,7 +77,7 @@ class CustomHeaderPage extends Page implements HasForms
 			->statePath('data');
 	}
 
-	public function submit()
+	public function submit(): void
 	{
 		$plugin = Plugin::getPlugin('CustomHeader');
 		$data = $this->form->getState();
@@ -88,7 +90,7 @@ class CustomHeaderPage extends Page implements HasForms
 				->success()
 				->title(__('general.saved'))
 				->send();
-		} catch (\Throwable $th) {
+		} catch (Throwable $th) {
 			Notification::make()
 				->danger()
 				->title(__('general.error'))
